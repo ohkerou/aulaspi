@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ifrn.pi.eventos.models.Convidado;
 import ifrn.pi.eventos.models.Evento;
 import ifrn.pi.eventos.repositories.ConvidadoRepository;
@@ -61,8 +60,9 @@ public class EventosController {
 		Evento evento = opt.get();
 		md.addObject("evento", evento);
 
-		List<Convidado> convidados = cr.findAll();
+		List<Convidado> convidados = cr.findByEvento(evento);
 		md.addObject("convidados", convidados);
+
 		return md;
 	}
 
@@ -75,12 +75,48 @@ public class EventosController {
 		Optional<Evento> opt = er.findById(idEvento);
 		if (opt.isEmpty()) {
 			return "redirect:/eventos";
+
 		}
+
 		Evento evento = opt.get();
 		convidado.setEvento(evento);
 
 		cr.save(convidado);
-		
+
 		return "redirect:/eventos/{idEvento}";
+	}
+
+	@GetMapping("/{id}/remover")
+	public String removerEvento(@PathVariable Long id) {
+
+		Optional<Evento> opt = er.findById(id);
+
+		if (!opt.isEmpty()) {
+			Evento evento = opt.get();
+
+			List<Convidado> convidados = cr.findByEvento(evento);
+
+			cr.deleteAll(convidados);
+			er.delete(evento);
+		}
+
+		return "redirect:/eventos";
+	}
+
+	
+	
+	@GetMapping("/{id}/apagar")
+	public String apagarConvidado(@PathVariable Long id) {
+
+		Optional<Convidado> opt = cr.findById(id);
+
+		if (!opt.isEmpty()) {
+			
+
+			Convidado convidado = opt.get();
+			cr.delete(convidado);
+		}
+
+		return "redirect:/eventos";
 	}
 }
